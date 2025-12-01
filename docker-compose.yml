@@ -1,0 +1,35 @@
+services:
+  # ----------------------------
+  # BACKEND SERVICE (FastAPI)
+  # ----------------------------
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # 1. Sync Code: Maps your PC folder to the container folder
+      - .:/app
+      # 2. Persist Models: Maps local model folder to root's model folder
+      - ./u2net_models:/root/.u2net
+    # --reload: Tells Uvicorn to restart when code changes
+    command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+
+  # ----------------------------
+  # FRONTEND SERVICE (Streamlit)
+  # ----------------------------
+  frontend:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      # 1. Sync Code: Essential for live reload
+      - .:/app
+    environment:
+      # CRITICAL FOR LIVE RELOAD:
+      - STREAMLIT_SERVER_RUN_ON_SAVE=true
+      # Ensure it listens on the correct address
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+    depends_on:
+      - backend
+    command: streamlit run ui.py
